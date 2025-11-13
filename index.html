@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Steganography Online</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --light-bg: #f8f9fa;
+      --dark-bg: #212529;
+    }
+    body {
+      background-color: #f5f7fb;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card-header {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 600;
+      border-bottom: none;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      border: none;
+      padding: 8px 20px;
+      font-weight: 500;
+    }
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+    }
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+    .nav-pills .nav-link {
+      color: #495057;
+      font-weight: 500;
+      border-radius: 5px;
+      margin: 0 5px;
+    }
+    .nav-pills .nav-link.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .tab-content {
+      padding: 20px 0;
+    }
+    canvas {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .preview-container {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <h1 class="display-4 fw-bold" style="color: var(--primary-color);">Steganography Tool</h1>
+      <p class="text-muted">Hide and reveal secret messages within images</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <ul class="nav nav-pills mb-4 justify-content-center" id="pills-tab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="encode-tab" data-bs-toggle="pill" data-bs-target="#encode" type="button" role="tab" aria-controls="encode" aria-selected="true">
+              <i class="fas fa-lock me-2"></i>Encode
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="genai-encode-tab" data-bs-toggle="pill" data-bs-target="#genai-encode" type="button" role="tab" aria-controls="genai-encode" aria-selected="false">
+              <i class="fas fa-robot me-2"></i>GENAI ENCODE
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+          <!-- Encode Tab -->
+          <div class="tab-pane fade show active" id="encode" role="tabpanel" aria-labelledby="encode-tab">
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-lock me-2"></i>Encode Message
+              </div>
+              <div class="card-body">
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  To encode a message into an image, choose the image you want to use, enter your text and hit the <strong>Encode</strong> button.
+                  The more text you want to hide, the larger the image has to be. All processing happens in your browser.
+                </div>
+                
+                <div class="mb-3">
+                  <label for="baseFile" class="form-label">Choose an image</label>
+                  <input class="form-control" type="file" id="baseFile" name="baseFile" accept="image/*" onchange="previewEncodeImage()">
+                </div>
+
+                <div class="mb-3">
+                  <label for="message" class="form-label">Message to hide</label>
+                  <textarea class="form-control message" id="message" rows="4" placeholder="Enter your secret message here..."></textarea>
+                </div>
+
+                <div class="text-end">
+                  <button class="btn btn-primary encode" onclick="encodeMessage()">
+                    <i class="fas fa-key me-2"></i>Encode Message
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="error alert alert-danger" style="display: none;"></div>
+            
+            <div class="binary card mt-4" style="display: none;">
+              <div class="card-header">
+                <i class="fas fa-code me-2"></i>Binary Representation
+              </div>
+              <div class="card-body">
+                <textarea class="form-control message" rows="3" style="word-wrap:break-word;" readonly></textarea>
+              </div>
+            </div>
+
+            <div class="images row mt-4" style="display: none;">
+              <div class="col-md-4 original" style="display: none;">
+                <div class="card h-100">
+                  <div class="card-header">Original Image</div>
+                  <div class="card-body text-center">
+                    <canvas class="img-fluid"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 nulled" style="display: none;">
+                <div class="card h-100">
+                  <div class="card-header">Normalized</div>
+                  <div class="card-body text-center">
+                    <canvas class="img-fluid"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 message" style="display: none;">
+                <div class="card h-100">
+                  <div class="card-header">Encoded Image</div>
+                  <div class="card-body text-center">
+                    <canvas class="img-fluid"></canvas>
+                  </div>
+                  <div class="card-footer text-center">
+                    <small class="text-muted">Right click and select "Save image as..."</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GENAI ENCODE Tab -->
+          <div class="tab-pane fade" id="genai-encode" role="tabpanel" aria-labelledby="genai-encode-tab">
+            <div class="card">
+              <div class="card-header bg-success text-white">
+                <i class="fas fa-robot me-2"></i>GENAI ENCODE
+              </div>
+              <div class="card-body">
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Generate an image using AI and embed a secret message in it. All processing happens in your browser.
+                </div>
+                
+                <div class="mb-3">
+                  <label for="promptInput" class="form-label">AI Image Generation Prompt</label>
+                  <textarea class="form-control" id="promptInput" rows="2" placeholder="Describe the image you want to generate..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label for="secretMessage" class="form-label">Secret Message to Embed</label>
+                  <textarea class="form-control" id="secretMessage" rows="3" placeholder="Enter the secret message to hide in the generated image..."></textarea>
+                </div>
+
+                <div class="text-end">
+                  <button class="btn btn-success" onclick="encodeWithAI()">
+                    <i class="fas fa-magic me-2"></i>Generate & Encode
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="genai-result mt-4" style="display: none;">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card h-100">
+                    <div class="card-header">Generated Image</div>
+                    <div class="card-body text-center">
+                      <canvas id="generatedCanvas" class="img-fluid"></canvas>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card h-100">
+                    <div class="card-header">Image with Hidden Message</div>
+                    <div class="card-body text-center">
+                      <canvas id="encodedCanvas" class="img-fluid"></canvas>
+                    </div>
+                    <div class="card-footer text-center">
+                      <button class="btn btn-outline-primary btn-sm me-2" onclick="downloadImage('encodedCanvas', 'hidden-message')">
+                        <i class="fas fa-download me-1"></i> Download
+                      </button>
+                      <small class="text-muted">Right click and select "Save image as..."</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- About Modal -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="aboutModalLabel">About Steganography Tool</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>This tool allows you to hide secret messages within images using steganography techniques.</p>
+            <p>All processing happens in your browser - no data is sent to any server.</p>
+            <p class="mb-0">Version 2.0.0</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Custom Script -->
+  <script type="text/JavaScript" src="script.js"></script>
+  <script>
+    // Function to handle image download
+    function downloadImage(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = `${filename}-${new Date().getTime()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Placeholder for AI encode function
+    function encodeWithAI() {
+      const prompt = document.getElementById('promptInput').value;
+      const message = document.getElementById('secretMessage').value;
+      
+      if (!prompt || !message) {
+        alert('Please provide both an image prompt and a secret message');
+        return;
+      }
+      
+      // This is a placeholder - in a real implementation, you would:
+      // 1. Call an AI image generation API with the prompt
+      // 2. Once the image is generated, use the existing encode functionality
+      // 3. Display both the original and encoded images
+      
+      alert('AI image generation would happen here. In this demo, we\'ll use a sample image.');
+      
+      // For demo purposes, we'll simulate image generation after a delay
+      setTimeout(() => {
+        // Create a sample canvas with the prompt text
+        const canvas = document.getElementById('generatedCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = 400;
+        canvas.height = 300;
+        
+        // Draw a gradient background
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#4facfe');
+        gradient.addColorStop(1, '#00f2fe');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add text
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        
+        // Wrap text
+        const maxWidth = canvas.width - 40;
+        const lineHeight = 30;
+        let y = 100;
+        
+        // Split prompt into words
+        const words = prompt.split(' ');
+        let line = '';
+        
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + ' ';
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+          
+          if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, canvas.width / 2, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+          } else {
+            line = testLine;
+          }
+        }
+        ctx.fillText(line, canvas.width / 2, y);
+        
+        // Show the result section
+        document.querySelector('.genai-result').style.display = 'block';
+        
+        // For demo, copy the generated canvas to the encoded canvas
+        const encodedCanvas = document.getElementById('encodedCanvas');
+        encodedCanvas.width = canvas.width;
+        encodedCanvas.height = canvas.height;
+        const encodedCtx = encodedCanvas.getContext('2d');
+        encodedCtx.drawImage(canvas, 0, 0);
+        
+        // In a real implementation, you would now encode the secret message into the image
+        // For now, we'll just add a small indicator
+        encodedCtx.fillStyle = 'rgba(0,0,0,0)';
+        encodedCtx.fillRect(0, 0, 10, 10);
+        
+        // Scroll to results
+        document.querySelector('.genai-result').scrollIntoView({ behavior: 'smooth' });
+        
+      }, 1500);
+    }
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+  </script>
+</body>
+</html>
