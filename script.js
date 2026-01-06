@@ -7,7 +7,7 @@ $('button.encode, button.decode').click(function(event) {
 
 // AI Image Generation Function using Freepik Mystic API
 async function generateAIImage(prompt, secretMessage) {
-    const apiKey = 'FPSXcc9a497918ab686315c7710e245fcf4e'; // Your Freepik API key
+    const apiKey = '           '; // Your Freepik API key
     const url = 'https://api.freepik.com/v1/ai/mystic';
     
     try {
