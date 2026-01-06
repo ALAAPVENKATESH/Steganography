@@ -49,7 +49,7 @@ All encoding and decoding operations are performed entirely in the browser. No d
 ├── script.js         # Steganography logic and AI integration
 └── README.md         # Project documentation
 ```
-##How It Works
+## How It Works
 Encoding (LSB Technique)
 
 The input message is converted into UTF-8 bytes.
@@ -68,7 +68,7 @@ The first 32 bits are read to determine message length.
 
 The remaining bits are reconstructed into the original UTF-8 message.
 
-##Running the Project Locally
+## Running the Project Locally
 
 Clone the repository:
 ```
@@ -87,11 +87,11 @@ Image generation tasks are polled asynchronously until completion.
 
 The generated image is then processed locally for message embedding.
 
-##Security Note:
+## Security Note:
 The API key is currently included in the client code for demonstration purposes.
 For production use, the API key should be moved to a secure backend.
 
-##Limitations
+## Limitations
 
 Maximum message length depends on image resolution.
 
